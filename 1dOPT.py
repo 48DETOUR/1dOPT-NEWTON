@@ -13,25 +13,20 @@ yValueForDupe = []
 def drawFuncGraph():
     try:
         if not var_func.get() or not var_interval.get() or not var_step.get():
-            raise ValueError("Поля функции и интервала должны быть заполнены")
+            raise ValueError("Поля функции, интервала и шага должны быть заполнены!")
 
-        #Очистка графика
         ax.clear()
-        #Очищаем списки значений x и y
         xValueForDupe.clear()
         yValueForDupe.clear()
-        #Получаем функцию и интервал из текстовых полей и преобразуем их в тип float
         function = var_func.get()
         f = sp.sympify(function)
-
         intervals = var_interval.get().split(", ")
+
         intervals[0] = float(intervals[0].strip())
         intervals[1] = float(intervals[1].strip())
-        ###
-
         step = float(var_step.get())
-        progressBar.configure(maximum=intervals[1] - step)
-        #Добавляем значения X, Y = f(x) с шагом step в отдельный массив
+
+        progressBar.configure(maximum=intervals[1] - step, value=0)
         for _ in np.arange(intervals[0], intervals[1], step):
             progressBar.step(step)
             root.update()
@@ -39,7 +34,6 @@ def drawFuncGraph():
             yValueForDupe.append(f.subs(x, _))
             print(f"{_} - X:{_}, Y:{f.subs(x, _)}")
 
-        #Рисуем график
         xValueForGraph = xValueForDupe
         yValueForGraph = yValueForDupe
 
@@ -56,7 +50,7 @@ def drawFuncGraph():
 def calcFunc():
     try:
         if not var_func.get() or not var_interval.get() or not var_step.get() or not var_X0.get() or not var_iter.get():
-            raise ValueError("Поля функции и интервала должны быть заполнены")
+            raise ValueError("Поля функции и интервала должны быть заполнены!")
         
         x0 = float(X0Entry.get())
         iterAmount = int(iterEntry.get())
@@ -64,7 +58,7 @@ def calcFunc():
         intervals[0] = float(intervals[0].strip())
         intervals[1] = float(intervals[1].strip())
         if ((x0 < intervals[0]) or (x0 > intervals[1])):
-            messagebox.showwarning("Неверное начальное приближение", "Измените значение X0")
+            messagebox.showwarning("Неверное начальное приближение!", "Измените значение X0!")
             return
 
         ax.cla()
@@ -73,7 +67,6 @@ def calcFunc():
 
         function = var_func.get()
         f = sp.sympify(function)
-        f_at_x0_value = f.subs(x, x0)
 
         f_firstDeriv = sp.diff(f, x)
         f_fD_at_x0_value = f_firstDeriv.subs(x, x0)
@@ -81,14 +74,12 @@ def calcFunc():
         f_secondDeriv = sp.diff(f_firstDeriv, x)
         f_sD_at_x0_value = f_secondDeriv.subs(x, x0)
 
-        f_newValue = float(x0) - (f_fD_at_x0_value / f_sD_at_x0_value)
-
         xNewArray = []
         yValAtXNew = []
-        x0 = float(X0Entry.get())
         xNewArray.append(x0)
         yValAtXNew.append(f.subs(x, x0))
-        print(f"\tITER 0 | {round(x0, 5)} | {round(f.subs(x,x0), 5)} | {round(f_fD_at_x0_value, 5)} | {round(f_sD_at_x0_value, 5)} | {round(x0, 5)}")
+        print(f"\t\t|    X0      |     f(x)    |    f`(x)    |    f``(x)  ")
+        print(f"\tITER 1 | {x0:.9f} | {f.subs(x,x0):.9f} | {f_fD_at_x0_value:.9f} | {f_sD_at_x0_value:.9f}")
 
         for _ in range(iterAmount):
             f_fD_at_x0_value = f_firstDeriv.subs(x, x0)
@@ -97,17 +88,17 @@ def calcFunc():
             if abs(f_fD_at_x0_value) < 1e-10:
                 break
             if x0 < intervals[0]:
-                print(f"\t\t ITER {_} - [ ! ] X is lower than {intervals[0]} - {x0}")
+                print(f"\t\tITER {_ + 2} - [ ! ] X is lower than {intervals[0]} - {x0}")
                 x0 = intervals[0]
                 print(f"\t\tX0 = {x0}")
             elif x0 > intervals[1]:
-                print(f"\t\t[ ! ] X is higher than {intervals[1]} - {x0}")
+                print(f"\t\tITER {_ + 2} - [ ! ] X is higher than {intervals[1]} - {x0}")
                 x0 = intervals[1]
                 print(f"\t\tX0 = {x0}")
 
             xNewArray.append(x0)
             yValAtXNew.append(f.subs(x, x0))
-            print(f"\tITER {_ + 1} | {round(x0, 5)} | {round(f.subs(x,x0), 5)} | {round(f_fD_at_x0_value, 5)} | {round(f_sD_at_x0_value, 5)} | {round(x0, 5)}")
+            print(f"\tITER {_ + 2} | {x0:.9f} | {f.subs(x,x0):.9f} | {f_fD_at_x0_value:.9f} | {f_sD_at_x0_value:.9f}")
 
         print(f"\nxNewArray - {len(xNewArray)} - {xNewArray}")
         print(f"\nyValAtXNew - {len(yValAtXNew)} - {yValAtXNew}")
@@ -131,20 +122,18 @@ def calcFunc():
         messagebox.showerror("Синтаксическая ошибка!")
     except Exception as e:
         messagebox.showerror("Ошибка!", str(e))
-    #return 0
 
-#Инициализация Tkinter
+# Инициализация Tkinter
 root = tk.Tk()
 root.title("1D-Optimization")
 root.geometry("1020x550")
 root.minsize(1020, 550)
 root.maxsize(1020, 550)
-
 #photo = tk.PhotoImage(file = 'icon.ico')
 #root.wm_iconphoto(False, photo)
 
-#Добавим заголовок
-mainLabel = tk.Label(root, text = "1D Optimization")
+# Заголовок
+mainLabel = tk.Label(root, text = "1D-Optimization. Newton's method")
 mainLabel.config(font=("Arial", 16))
 mainLabel.pack()
 
@@ -153,7 +142,7 @@ mainLabel.pack()
 entryFrame = tk.Frame(borderwidth=1,  relief="solid", padx=6, pady=8)
 entryFrame.place(x=20,y=35)
 
-#Переменные для хранения введённых данных
+# Переменные для хранения введённых данных
 var_func = tk.StringVar()
 var_interval = tk.StringVar()
 var_X0 = tk.StringVar()
@@ -210,7 +199,7 @@ btn_Calc.grid(row=1, column=0, pady=8)
 exitFrame = tk.Frame(borderwidth=1, relief="solid", padx=6, pady=8)
 exitFrame.place(x=10, y=476)
 
-btn_Exit = tk.Button(exitFrame, text="Exit", command=root.destroy, width=41, height=2)
+btn_Exit = tk.Button(exitFrame, text="Exit", command=root.quit, width=41, height=2)
 btn_Exit.pack()
 
 ####################################
@@ -219,8 +208,8 @@ graphFrame = tk.Frame(borderwidth=1, relief="solid", padx=6, pady=8)
 graphFrame.place(x=330, y=35)
 
 figure, ax = plt.subplots()
-canvas = FigureCanvasTkAgg(figure, graphFrame)
 
+canvas = FigureCanvasTkAgg(figure, graphFrame)
 toolbar = NavigationToolbar2Tk(canvas, graphFrame)
 toolbar.update()
 
